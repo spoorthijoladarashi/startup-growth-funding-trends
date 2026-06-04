@@ -2,7 +2,9 @@ streamlit
 pandas
 numpy
 plotly
-matplotlib
-scikit-learn
-seaborn
 openpyxl
+scikit-learn
+scipy
+pyarrow
+streamlit-option-menu
+Pillow
