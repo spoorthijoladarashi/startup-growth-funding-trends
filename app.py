@@ -1,348 +1,289 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-
-# -----------------------------------
-# PAGE CONFIG
-# -----------------------------------
-st.set_page_config(
-    page_title="Executive Dashboard",
-    page_icon="🚀",
-    layout="wide"
+from utils.styling import (
+    apply_theme,
+    page_banner,
+    section_header,
+    dashboard_footer,
+    insight_box
+)
+from utils.data_loader import (
+    load_data,
+    get_kpis
 )
 
-# -----------------------------------
-# LOAD DATA
-# -----------------------------------
-@st.cache_data
-def load_data():
-    return pd.read_csv("startup_data.csv")
+# --------------------------------------------------
+# PAGE CONFIG
+# --------------------------------------------------
+st.set_page_config(
+    page_title="Startup Analytics Dashboard",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
+# --------------------------------------------------
+# APPLY CUSTOM STYLING
+# --------------------------------------------------
+apply_theme()
+
+# --------------------------------------------------
+# LOAD DATA
+# --------------------------------------------------
 df = load_data()
 
-# -----------------------------------
-# TITLE
-# -----------------------------------
-st.title("🚀 Executive Startup Dashboard")
-st.markdown("### Deep Analytics of Startup Ecosystem")
+kpis = get_kpis(df)
+
+# --------------------------------------------------
+# HERO BANNER
+# --------------------------------------------------
+page_banner(
+    "🚀 Startup Analytics Dashboard",
+    "Executive Intelligence Platform for Startup Ecosystem Analysis"
+)
+
+# --------------------------------------------------
+# WELCOME SECTION
+# --------------------------------------------------
+st.markdown("""
+### Welcome to the Startup Analytics Platform
+
+Analyze startup funding, valuation, revenue, market share,
+profitability, growth potential and industry trends through
+interactive dashboards and AI-powered insights.
+
+Use the sidebar navigation to explore detailed analytics.
+""")
 
 st.markdown("---")
 
-# -----------------------------------
-# SIDEBAR FILTERS
-# -----------------------------------
-st.sidebar.header("🎯 Dashboard Filters")
+# --------------------------------------------------
+# KPI OVERVIEW
+# --------------------------------------------------
+section_header("📊 Executive Snapshot")
 
-industry = st.sidebar.multiselect(
-    "Industry",
-    options=df["Industry"].unique(),
-    default=df["Industry"].unique()
-)
-
-region = st.sidebar.multiselect(
-    "Region",
-    options=df["Region"].unique(),
-    default=df["Region"].unique()
-)
-
-exit_status = st.sidebar.multiselect(
-    "Exit Status",
-    options=df["Exit Status"].unique(),
-    default=df["Exit Status"].unique()
-)
-
-filtered_df = df[
-    (df["Industry"].isin(industry)) &
-    (df["Region"].isin(region)) &
-    (df["Exit Status"].isin(exit_status))
-]
-
-# -----------------------------------
-# KPI METRICS
-# -----------------------------------
-st.subheader("📊 Key Performance Indicators")
-
-col1,col2,col3,col4,col5,col6 = st.columns(6)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.metric(
-        "Total Startups",
-        len(filtered_df)
+        "🚀 Total Startups",
+        f"{kpis['total_startups']:,}"
+    )
+
+    st.metric(
+        "💰 Total Funding",
+        f"${kpis['total_funding']:,.0f}M"
     )
 
 with col2:
     st.metric(
-        "Total Funding",
-        f"${filtered_df['Funding Amount (M USD)'].sum():,.0f}M"
+        "📈 Average Valuation",
+        f"${kpis['avg_valuation']:,.0f}M"
+    )
+
+    st.metric(
+        "💵 Total Revenue",
+        f"${kpis['total_revenue']:,.0f}M"
     )
 
 with col3:
     st.metric(
-        "Avg Valuation",
-        f"${filtered_df['Valuation (M USD)'].mean():,.0f}M"
+        "👨‍💼 Total Employees",
+        f"{kpis['total_employees']:,}"
     )
 
-with col4:
     st.metric(
-        "Total Revenue",
-        f"${filtered_df['Revenue (M USD)'].sum():,.0f}M"
-    )
-
-with col5:
-    st.metric(
-        "Employees",
-        f"{filtered_df['Employees'].sum():,}"
-    )
-
-with col6:
-    st.metric(
-        "Profitability %",
-        f"{filtered_df['Profitable'].mean()*100:.1f}%"
+        "🏆 Profitability",
+        f"{kpis['profitability_rate']:.2f}%"
     )
 
 st.markdown("---")
 
-# -----------------------------------
-# CHARTS ROW 1
-# -----------------------------------
-col1,col2 = st.columns(2)
+# --------------------------------------------------
+# DASHBOARD MODULES
+# --------------------------------------------------
+section_header("🧠 Analytics Modules")
 
-with col1:
+module1, module2 = st.columns(2)
 
-    industry_funding = (
-        filtered_df
-        .groupby("Industry")["Funding Amount (M USD)"]
-        .sum()
-        .reset_index()
-    )
+with module1:
 
-    fig = px.bar(
-        industry_funding,
-        x="Industry",
-        y="Funding Amount (M USD)",
-        title="💰 Funding by Industry",
-        text_auto=True
-    )
+    st.info("""
+    ### 📊 Executive Dashboard
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
+    - Startup KPIs
+    - Industry Overview
+    - Regional Analytics
+    - Funding Overview
+    - Valuation Snapshot
+    """)
 
-with col2:
+    st.info("""
+    ### 💰 Funding Analytics
 
-    region_funding = (
-        filtered_df
-        .groupby("Region")["Funding Amount (M USD)"]
-        .sum()
-        .reset_index()
-    )
+    - Funding Trends
+    - Funding Distribution
+    - Industry Funding
+    - Region Funding
+    - Funding Efficiency
+    """)
 
-    fig = px.pie(
-        region_funding,
-        names="Region",
-        values="Funding Amount (M USD)",
-        title="🌍 Funding Distribution by Region"
-    )
+    st.info("""
+    ### 📈 Valuation Analytics
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
+    - Valuation Distribution
+    - Unicorn Analysis
+    - Top Valued Startups
+    - Valuation Heatmaps
+    """)
 
-# -----------------------------------
-# CHARTS ROW 2
-# -----------------------------------
-col1,col2 = st.columns(2)
+with module2:
 
-with col1:
+    st.info("""
+    ### 💵 Revenue Analytics
 
-    fig = px.scatter(
-        filtered_df,
-        x="Funding Amount (M USD)",
-        y="Valuation (M USD)",
-        size="Revenue (M USD)",
-        color="Industry",
-        hover_name="Startup Name",
-        title="📈 Funding vs Valuation"
-    )
+    - Revenue Performance
+    - Revenue Efficiency
+    - Revenue Trends
+    - Revenue vs Employees
+    """)
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
+    st.info("""
+    ### 🌍 Market Analytics
 
-with col2:
+    - Market Share
+    - Competitive Landscape
+    - Industry Dominance
+    - Regional Analysis
+    """)
 
-    profitability = (
-        filtered_df["Profitable"]
-        .value_counts()
-        .reset_index()
-    )
+    st.info("""
+    ### 💹 Profitability Insights
 
-    profitability.columns = [
-        "Status",
-        "Count"
-    ]
+    - Profitability Trends
+    - Industry Comparison
+    - Revenue Impact
+    - Funding Impact
+    """)
 
-    fig = px.pie(
-        profitability,
-        names="Status",
-        values="Count",
-        title="🏆 Profitability Breakdown"
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-# -----------------------------------
-# TOP STARTUPS
-# -----------------------------------
 st.markdown("---")
 
-st.subheader("🏅 Top 10 Most Valuable Startups")
+# --------------------------------------------------
+# AI INSIGHTS PREVIEW
+# --------------------------------------------------
+section_header("🤖 AI Insight Preview")
 
-top10 = (
-    filtered_df
-    .sort_values(
-        by="Valuation (M USD)",
-        ascending=False
-    )
-    .head(10)
-)
-
-st.dataframe(
-    top10,
-    use_container_width=True
-)
-
-# -----------------------------------
-# MARKET SHARE ANALYSIS
-# -----------------------------------
-st.markdown("---")
-
-st.subheader("📊 Market Share Analysis")
-
-market_share = (
-    filtered_df
-    .groupby("Industry")["Market Share (%)"]
+top_industry = (
+    df.groupby("Industry")
+    ["Funding Amount (M USD)"]
     .sum()
-    .reset_index()
-)
-
-fig = px.treemap(
-    market_share,
-    path=["Industry"],
-    values="Market Share (%)",
-    title="Industry Market Share"
-)
-
-st.plotly_chart(
-    fig,
-    use_container_width=True
-)
-
-# -----------------------------------
-# STARTUP FOUNDATION TREND
-# -----------------------------------
-st.markdown("---")
-
-st.subheader("📅 Startup Foundation Trend")
-
-yearly = (
-    filtered_df
-    .groupby("Year Founded")
-    .size()
-    .reset_index(name="Count")
-)
-
-fig = px.line(
-    yearly,
-    x="Year Founded",
-    y="Count",
-    markers=True,
-    title="Startups Founded Per Year"
-)
-
-st.plotly_chart(
-    fig,
-    use_container_width=True
-)
-
-# -----------------------------------
-# REVENUE ANALYSIS
-# -----------------------------------
-st.markdown("---")
-
-st.subheader("💵 Revenue by Industry")
-
-revenue = (
-    filtered_df
-    .groupby("Industry")["Revenue (M USD)"]
-    .sum()
-    .reset_index()
-)
-
-fig = px.bar(
-    revenue,
-    x="Industry",
-    y="Revenue (M USD)",
-    color="Industry",
-    text_auto=True
-)
-
-st.plotly_chart(
-    fig,
-    use_container_width=True
-)
-
-# -----------------------------------
-# INSIGHTS SECTION
-# -----------------------------------
-st.markdown("---")
-
-st.subheader("🤖 Automated Business Insights")
-
-highest_funding_industry = (
-    filtered_df
-    .groupby("Industry")["Funding Amount (M USD)"]
-    .mean()
-    .idxmax()
-)
-
-highest_valuation_industry = (
-    filtered_df
-    .groupby("Industry")["Valuation (M USD)"]
-    .mean()
     .idxmax()
 )
 
 top_region = (
-    filtered_df
-    .groupby("Region")["Valuation (M USD)"]
+    df.groupby("Region")
+    ["Valuation (M USD)"]
     .sum()
     .idxmax()
 )
 
-st.success(
-    f"🚀 Highest average funding industry: {highest_funding_industry}"
+top_startup = (
+    df.sort_values(
+        "Valuation (M USD)",
+        ascending=False
+    )
+    .iloc[0]["Startup Name"]
 )
 
-st.success(
-    f"💎 Highest valuation industry: {highest_valuation_industry}"
+insight_box(
+    f"Highest funded industry: {top_industry}"
 )
 
-st.success(
-    f"🌍 Top valuation region: {top_region}"
+insight_box(
+    f"Leading startup region: {top_region}"
 )
 
-st.success(
-    f"📈 Profitability Rate: {filtered_df['Profitable'].mean()*100:.2f}%"
+insight_box(
+    f"Most valuable startup: {top_startup}"
+)
+
+insight_box(
+    f"Overall profitability rate is {kpis['profitability_rate']:.2f}%"
 )
 
 st.markdown("---")
 
-st.caption("Created using Streamlit + Plotly + Startup Dataset Analytics")
+# --------------------------------------------------
+# DATA OVERVIEW
+# --------------------------------------------------
+section_header("📁 Dataset Overview")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.write("### Industries")
+    st.write(df["Industry"].nunique())
+
+with col2:
+    st.write("### Regions")
+    st.write(df["Region"].nunique())
+
+with col3:
+    st.write("### Exit Categories")
+    st.write(df["Exit Status"].nunique())
+
+st.markdown("---")
+
+# --------------------------------------------------
+# SAMPLE DATA
+# --------------------------------------------------
+section_header("🔍 Dataset Preview")
+
+st.dataframe(
+    df.head(15),
+    use_container_width=True
+)
+
+st.markdown("---")
+
+# --------------------------------------------------
+# SIDEBAR NAVIGATION HELP
+# --------------------------------------------------
+st.sidebar.success("🚀 Startup Analytics Platform")
+
+st.sidebar.markdown("""
+### Navigation
+
+📊 Executive Dashboard
+
+💰 Funding Analytics
+
+📈 Valuation Analytics
+
+💵 Revenue Analytics
+
+🌍 Market Analytics
+
+💹 Profitability Insights
+
+🤖 AI Insights
+""")
+
+st.sidebar.markdown("---")
+
+st.sidebar.info(
+    "Select a page from the sidebar to explore detailed analytics."
+)
+
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
+dashboard_footer()
+
+        
+       
+
+
+
+   
+    
+    
